@@ -1,34 +1,51 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import * as yup from "yup";
-import UsersList from "./UserList";
+import UserList from "./UserList";
 
 const formSchema = yup.object().shape({
-  name: yup.string().required("Name is a required field"),
+  name: yup.string().length(2).required("Name is a required field"),
   size: yup.string().required("Please select size"),
-  toppings: yup.boolean().oneOf([true], "Please choose your toppings"),
-  pepperoni: yup.boolean().oneOf([true]),
-  mushroom: yup.boolean().oneOf([true]),
-  olive: yup.boolean().oneOf([true]),
-  anchovi: yup.boolean().oneOf([true]),
   instructions: yup.string("Any Special Instructions?"),
+  pepperoni: yup.boolean().oneOf([true], "Please select one"),
+  mushroom: yup.boolean().oneOf([true], "Please select one"),
+  olive: yup.boolean().oneOf([true], "Please select one"),
+  anchovi: yup.boolean().oneOf([true]),
+  
 });
 
 export default function Form() {
-  const [buttonDisabled, setButtonDisabled] = useState(true);
+  
 
   const [formState, setFormState] = useState({
     name: "",
     size: "",
-    toppings: "",
     instructions: "",
+    pepperoni: false,
+    mushroom: false,
+    olive: false,
+    anchovi: false
+
   });
+
+ 
+  const [buttonDisabled, setButtonDisabled] = useState(true);
+  const [user, setUser] = useState([]);
+  
+  useEffect(() => {
+    formSchema.isValid(formState).then(valid => {
+      setButtonDisabled(!valid);
+    });
+  }, [formState]);
 
   const [errors, setErrors] = useState({
     name: "",
     size: "",
-    toppings: "",
     instructions: "",
+    pepperoni: "",
+    mushroom: "",
+    olive: "",
+    anchovi: ""
   });
 
   const [post, setPost] = useState([]);
@@ -40,57 +57,25 @@ export default function Form() {
     });
   }, [formState]);
 
-  const formSubmit = (event) => {
-    event.preventDefault();
-    console.log("formSubmit", formSubmit);
-    axios
-      .post("https://reqes.in/api/users", formState)
-      .then((response) => {
-        setPost(response.data);
-        console.log(response.data, "response.data");
-        // setUsers([...formState, response.data]);
-        submit(response.data);
-        // setFormState({
-        //   name: "",
-        //   size: "",
-        //   toppings: "",
-        //   instructions: "",
-        // });
-      })
-      .catch((err) => console.log(err.response));
-    console.log(users);
-  };
+ 
 
   const validateChange = (event) => {
     yup
       .reach(formSchema, event.target.name)
       .validate(event.target.value)
-      .then((valid) => {
+      .then(valid => {
         setErrors({
           ...errors,
-          [event.target.name]: "",
+          [event.target.name]: ""
         });
       })
-      .catch((err) => {
+      .catch(err => {
         setErrors({
           ...errors,
-          [event.target.name]: err.errors[0],
-        });
-      });
+          [event.target.name]: err.errors[0]
+        })
+      })
   };
-
-  //   const inputChange = (event) => {
-  //     event.persist();
-  //     const newFormData = {
-  //       ...formState,
-  //       [event.target.name]:
-  //         event.target.type === "checkbox"
-  //           ? event.target.checked
-  //           : event.target.value,
-  //     };
-  //     validateChange(event);
-  //     setFormState(newFormData);
-  //   };
 
   const inputChange = (event) => {
     event.persist();
@@ -100,6 +85,26 @@ export default function Form() {
         ? event.target.checked
         : event.target.value;
     setFormState({ ...formState, [event.target.name]: value });
+  };
+
+  const formSubmit = (event) => {
+    event.preventDefault();
+    // console.log("formSubmit", formSubmit);
+    axios.post("https://reqres.in/api/users",  formState)
+    .then(response => {
+        setUser([...user, response.data]);
+        setFormState({
+        name: "",
+        size: "",
+        instructions: "",
+        pepperoni: false,
+        mushroom: false,
+        olive: false,
+        anchovi: false
+        })
+      })
+
+      .catch(err => console.log(err));
   };
 
   return (
@@ -126,7 +131,7 @@ export default function Form() {
           name="size"
           onChange={inputChange}
         >
-          <option value="personal">Personal</option>
+          <option value="regular">Regular</option>
           <option value="medium">Medium</option>
           <option value="large">Large</option>
           <option value="xl">Extra Large</option>
@@ -139,6 +144,7 @@ export default function Form() {
         <br />
         <textarea
           name="instructions"
+          placeHolder="Anything we should know of?"
           value={formState.instructions}
           onChange={inputChange}
         />
@@ -147,7 +153,7 @@ export default function Form() {
         ) : null}
       </label>
       <br />
-
+      <p>Choose your toppings:</p> 
       <label htmlFor="pepperoni">
         pepperonis
         <input
@@ -189,8 +195,8 @@ export default function Form() {
       </label>
       <br />
       <button type="submit">Add to Order</button>
-      {post.length > 0 ? <pre>{JSON.stringify(post, null, 2)}</pre> : null}
-      <UsersList users={users} />
+      
+      <UserList user={user} />
     </form>
   );
 }

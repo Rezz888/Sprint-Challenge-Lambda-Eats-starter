@@ -1,17 +1,16 @@
 import React from "react";
 
 
-const UsersList = (props) => {
-  return (
-    <div>
-      <h2>Previous Orders</h2>
-      <ul>
-        {props.users.map((user) => {
-          return <div className="user">{user.name}</div>;
-        })}
-      </ul>
-    </div>
-  );
-};
+const UserList = props => {
+  const { user } = props;
 
-export default UsersList;
+  return(
+      <div className="users">
+        <pre>{user.length > 0 ? <code>{JSON.stringify(user, null, 2)}</code> : null}</pre>  
+      </div>
+      
+  );
+  
+}
+
+export default UserList;
